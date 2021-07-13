@@ -11,9 +11,9 @@ RUN cargo build --release
 
 FROM debian:10-slim
 
-RUN apt-get update && \
-    apt-get install -y openssl
+RUN apt-get update  && \
+    apt-get install -y ca-certificates
 
 COPY --from=build /ddns/target/release/ddns /usr/bin/ddns
 
-ENTRYPOINT ["opur-dingtalk-bot"]
+ENTRYPOINT ["ddns"]
