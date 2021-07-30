@@ -1,7 +1,7 @@
-FROM rust:1.53-slim as BUILD
+FROM rust:1.54-slim as BUILD
 
 RUN apt-get update && \
-    apt-get install -y librust-openssl-dev
+    apt-get install -y librust-openssl-dev pkg-config
 
 WORKDIR /ddns
 

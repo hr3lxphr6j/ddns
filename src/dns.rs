@@ -1,3 +1,4 @@
+use anyhow::{bail, Result};
 use async_trait::async_trait;
 use std::collections::HashMap;
 use thiserror::Error;
@@ -36,17 +37,9 @@ pub enum RecoderManagerBuilderError {
 
 #[async_trait]
 pub trait RecoderManager {
-    async fn get_records(&self, name: &str) -> Result<Vec<DnsRecord>, Box<dyn std::error::Error>>;
-    async fn create_records(
-        &self,
-        name: &str,
-        rcd: &DnsRecord,
-    ) -> Result<(), Box<dyn std::error::Error>>;
-    async fn update_records(
-        &self,
-        name: &str,
-        rcd: &DnsRecord,
-    ) -> Result<(), Box<dyn std::error::Error>>;
+    async fn get_records(&self, name: &str) -> Result<Vec<DnsRecord>>;
+    async fn create_records(&self, name: &str, rcd: &DnsRecord) -> Result<()>;
+    async fn update_records(&self, name: &str, rcd: &DnsRecord) -> Result<()>;
 }
 
 pub struct RecoderManagerBuilder {
@@ -79,14 +72,12 @@ impl RecoderManagerBuilder {
         self
     }
 
-    pub fn build(self) -> Result<Box<dyn RecoderManager>, Box<dyn std::error::Error>> {
+    pub fn build(self) -> Result<Box<dyn RecoderManager>> {
         match &self.typ[..] {
-            "" => Err(Box::new(RecoderManagerBuilderError::ErrTypeIsEmpty)),
+            "" => bail!(RecoderManagerBuilderError::ErrTypeIsEmpty),
             #[cfg(feature = "cloudflare")]
             "cloudflare" => Ok(Box::new(crate::cloudflare::Cloudflare::new(&self.cfg)?)),
-            _ => Err(Box::new(RecoderManagerBuilderError::ErrUnknownType(
-                self.typ.clone(),
-            ))),
+            _ => bail!(RecoderManagerBuilderError::ErrUnknownType(self.typ.clone(),)),
         }
     }
 }

@@ -1,4 +1,5 @@
 use crate::dns::{DnsKind, DnsRecord, RecoderManager};
+use anyhow::{bail, Result};
 use async_trait::async_trait;
 use cloudflare::endpoints::dns::{
     CreateDnsRecord, CreateDnsRecordParams, DnsContent, ListDnsRecords, ListDnsRecordsParams,
@@ -12,7 +13,6 @@ use cloudflare::framework::{
     HttpApiClientConfig,
 };
 use std::collections::HashMap;
-use std::error::Error;
 use thiserror::Error;
 use tokio::sync::Mutex;
 
@@ -72,7 +72,7 @@ pub struct Cloudflare {
 }
 
 impl Cloudflare {
-    pub fn new(cfg: &HashMap<String, String>) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(cfg: &HashMap<String, String>) -> Result<Self> {
         let mut email = String::new();
         let mut zone_id = String::new();
         let mut key = String::new();
@@ -89,7 +89,7 @@ impl Cloudflare {
             if let Some(v) = cfg.get(i.1) {
                 *i.0 = v.clone()
             } else {
-                return Err(Box::new(i.2));
+                bail!(i.2);
             }
         }
 
@@ -126,7 +126,7 @@ impl Cloudflare {
 
 #[async_trait]
 impl RecoderManager for Cloudflare {
-    async fn get_records(&self, name: &str) -> Result<Vec<DnsRecord>, Box<dyn std::error::Error>> {
+    async fn get_records(&self, name: &str) -> Result<Vec<DnsRecord>> {
         let resp: ApiSuccess<Vec<cloudflare::endpoints::dns::DnsRecord>> =
             self.get_raw_records(name).await?;
         Ok(resp
@@ -136,7 +136,7 @@ impl RecoderManager for Cloudflare {
             .collect())
     }
 
-    async fn create_records(&self, name: &str, rcd: &DnsRecord) -> Result<(), Box<dyn Error>> {
+    async fn create_records(&self, name: &str, rcd: &DnsRecord) -> Result<()> {
         let endpoint = CreateDnsRecord {
             zone_identifier: &self.zone_id,
             params: CreateDnsRecordParams {
@@ -151,7 +151,7 @@ impl RecoderManager for Cloudflare {
         Ok(())
     }
 
-    async fn update_records(&self, name: &str, rcd: &DnsRecord) -> Result<(), Box<dyn Error>> {
+    async fn update_records(&self, name: &str, rcd: &DnsRecord) -> Result<()> {
         let resp = self.get_raw_records(name).await?;
 
         let identifier;
@@ -163,9 +163,9 @@ impl RecoderManager for Cloudflare {
         {
             identifier = v.id
         } else {
-            return Err(Box::new(CloudflareError::ErrRecordNotExist {
+            bail!(CloudflareError::ErrRecordNotExist {
                 record_name: String::from(name),
-            }));
+            });
         };
 
         let endpoint = UpdateDnsRecord {
