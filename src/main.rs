@@ -23,8 +23,8 @@ async fn main() {
     let app = Application::new(config).unwrap();
     match app.do_update().await {
         Ok(_) => log::info!("Done."),
-        Err(_) => {
-            log::error!("Failed.");
+        Err(err) => {
+            log::error!("Failed, err: {}", err);
             std::process::exit(1)
         }
     }

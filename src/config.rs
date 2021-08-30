@@ -12,11 +12,13 @@ pub struct Service {
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
     pub services: Vec<Service>,
+    pub ipv6: bool,
 }
 
 impl AppConfig {
     pub fn new(file: impl AsRef<str>) -> Result<Self, ConfigError> {
         let mut s = Config::default();
+        s.set_default("ipv6", false)?;
         s.merge(File::with_name(file.as_ref()))?;
         s.try_into()
     }

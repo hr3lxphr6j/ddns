@@ -30,5 +30,4 @@ anyhow = "1.0"
 cloudflare = { version = "0.8.5", optional = true }
 
 [features]
-ipv6 = []
-default = ["cloudflare", "ipv6"]
+default = ["cloudflare"]

@@ -1,6 +1,7 @@
 use anyhow::{bail, Result};
 use async_trait::async_trait;
 use std::collections::HashMap;
+use std::net::{Ipv4Addr, Ipv6Addr};
 use thiserror::Error;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -33,6 +34,12 @@ pub enum RecoderManagerBuilderError {
     ErrTypeIsEmpty,
     #[error("unknown type: '{0}'")]
     ErrUnknownType(String),
+}
+
+#[async_trait]
+pub trait WhoAmi {
+    async fn fetch_ipv4_addr(&self) -> Result<Ipv4Addr>;
+    async fn fetch_ipv6_addr(&self) -> Result<Ipv6Addr>;
 }
 
 #[async_trait]
