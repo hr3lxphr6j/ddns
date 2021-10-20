@@ -6,7 +6,7 @@ on:
 jobs:
   release-bins:
     name: release ${{ matrix.target }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -19,7 +19,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUSTTARGET: ${{ matrix.target }}
   release-docker-image:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     name: release docker image
     steps:
       - uses: actions/checkout@v2

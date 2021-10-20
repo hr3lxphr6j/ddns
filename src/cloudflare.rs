@@ -5,29 +5,31 @@ use cloudflare::endpoints::dns::{
     CreateDnsRecord, CreateDnsRecordParams, DnsContent, ListDnsRecords, ListDnsRecordsParams,
     UpdateDnsRecord, UpdateDnsRecordParams,
 };
+use cloudflare::framework::auth::Credentials;
 use cloudflare::framework::{
     async_api::ApiClient,
     auth::Credentials::UserAuthKey,
+    auth::Credentials::UserAuthToken,
     response::{ApiResponse, ApiSuccess},
     Environment::Production,
     HttpApiClientConfig,
 };
 use std::collections::HashMap;
+use std::option::Option::Some;
 use thiserror::Error;
 use tokio::sync::Mutex;
 
 pub const CFG_NAME_EMAIL: &'static str = "email";
 pub const CFG_NAME_ZONE_ID: &'static str = "zoneId";
 pub const CFG_NAME_KEY: &'static str = "key";
+pub const CFG_NAME_API_TOKEN: &'static str = "token";
 
 #[derive(Debug, Error)]
 pub enum CloudflareError {
-    #[error("email is empty")]
-    ErrEmailIsEmpty,
-    #[error("zone id is empty")]
+    #[error("cfg: zoneId is empty")]
     ErrZoneIdIsEmpty,
-    #[error("key is empty")]
-    ErrKeyIsEmpty,
+    #[error("cfg: key & email or token is empty")]
+    ErrAuthIsEmpty,
     #[error("record[{record_name}] not exist")]
     ErrRecordNotExist { record_name: String },
 }
@@ -73,30 +75,29 @@ pub struct Cloudflare {
 
 impl Cloudflare {
     pub fn new(cfg: &HashMap<String, String>) -> Result<Self> {
-        let mut email = String::new();
-        let mut zone_id = String::new();
-        let mut key = String::new();
-
-        for i in [
-            (&mut email, CFG_NAME_EMAIL, CloudflareError::ErrEmailIsEmpty),
-            (
-                &mut zone_id,
-                CFG_NAME_ZONE_ID,
-                CloudflareError::ErrZoneIdIsEmpty,
-            ),
-            (&mut key, CFG_NAME_KEY, CloudflareError::ErrKeyIsEmpty),
-        ] {
-            if let Some(v) = cfg.get(i.1) {
-                *i.0 = v.clone()
-            } else {
-                bail!(i.2);
-            }
+        let zone_id = match cfg.get(CFG_NAME_ZONE_ID) {
+            Some(v) => v,
+            None => bail!(CloudflareError::ErrZoneIdIsEmpty),
         }
+        .clone();
 
-        let auth = UserAuthKey { email, key };
-        let cfg: HttpApiClientConfig = Default::default();
+        let auth = if cfg.contains_key(CFG_NAME_EMAIL) && cfg.contains_key(CFG_NAME_KEY) {
+            UserAuthKey {
+                email: cfg.get(CFG_NAME_EMAIL).unwrap().clone(),
+                key: cfg.get(CFG_NAME_KEY).unwrap().clone(),
+            }
+        } else if cfg.contains_key(CFG_NAME_API_TOKEN) {
+            UserAuthToken {
+                token: cfg.get(CFG_NAME_API_TOKEN).unwrap().clone(),
+            }
+        } else {
+            bail!(CloudflareError::ErrAuthIsEmpty)
+        };
+
         let client = Mutex::new(cloudflare::framework::async_api::Client::new(
-            auth, cfg, Production,
+            auth,
+            Default::default(),
+            Production,
         )?);
         Ok(Self { zone_id, client })
     }

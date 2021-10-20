@@ -14,7 +14,9 @@
 name = "cloudflare"
 domain = ["foo.xxx.com", "bar.xxx.com"]
 [services.config]
-email = "xxx"
 zoneId = "xxx"
+# Choose one of key+email and token authentication methods
 key = "xxx
+email = "xxx"
+token = "xxx"
 ```
