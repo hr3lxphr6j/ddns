@@ -37,7 +37,7 @@ jobs:
           - x86_64-unknown-linux-gnu
           - x86_64-unknown-linux-musl
     steps:
-    - run: sudo apt-get install -y librust-openssl-dev librust-openssl-probe-dev librust-openssl-sys-dev
+    - run: sudo apt-get install -y pkg-config librust-openssl-dev librust-openssl-probe-dev librust-openssl-sys-dev
     - uses: actions/checkout@v2
     - uses: actions-rs/toolchain@v1
       with:
