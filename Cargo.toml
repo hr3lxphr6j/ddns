@@ -21,13 +21,13 @@ tokio = { version = "1", features = ["full"] }
 async-trait = { version = "0.1.50" }
 serde = { version = "1.0", features = ["derive"] }
 config = { version = "0.11" }
-reqwest = { version = "0.11" }
+reqwest = { version = "0.11", default-features = false, features = ["json"] }
 log = { version = "0.4.14" }
 env_logger = { version = "0.8.4" }
 clap = { version = "3.0.0-beta.2" }
 anyhow = "1.0"
 
-cloudflare = { version = "0.8.5", optional = true }
+cloudflare = { version = "0.8.7", default-features = false, features = ["rustls-tls"], optional = true }
 
 [features]
 default = ["cloudflare"]
