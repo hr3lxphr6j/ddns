@@ -16,7 +16,7 @@ domain = ["foo.xxx.com", "bar.xxx.com"]
 [services.config]
 zoneId = "xxx"
 # Choose one of key+email and token authentication methods
-key = "xxx
+key = "xxx"
 email = "xxx"
 token = "xxx"
 ```
